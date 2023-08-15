@@ -55,18 +55,15 @@ def printc(*args, **kwargs):
 
 def get_output_dir(output_dir=None):
     """
-    Returns the output directory.
+    Returns the output directory in the user's home directory.
     """
-
-    if not output_dir:
-        app_dir = os.path.dirname(os.path.realpath(__file__))
-        output_dir = os.path.join(app_dir, "../output")
+    home_dir = os.path.expanduser("~")
+    output_dir = os.path.join(home_dir, "lambchop_output")
     return output_dir
-
 
 def save_to_file(data, full_name, out_dir, extension="json", separator="\n"):
     """
-    Saves data to a file based on the provided peron's name and extension.
+    Saves data to a file based on the provided person's name and extension.
 
     Args:
         data (str): The data to be saved.
@@ -78,7 +75,7 @@ def save_to_file(data, full_name, out_dir, extension="json", separator="\n"):
     Returns:
         str: The path to the saved file.
     """
-
+    os.makedirs(out_dir, exist_ok=True)
     filename = full_name.lower().replace(" ", "_") + f".{extension}"
     output_file_path = os.path.join(out_dir, filename)
 
