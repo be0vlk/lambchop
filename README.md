@@ -41,7 +41,7 @@ The following optional arguments are available for further customization. You'll
  GPT takes this into account and will write as if the person is a non-native English speaker.<br>
 `style`: Sets the overall style of writing used in the profile. The default style is "casual" but you can use any value you want.<br>
 
-You can provide some, all, or none of these. If you don't provide any, the defaults will be used.
+The default output directory is the current user's home directory ("~/lambchop_output"). You can provide some, all, or none of these. If you don't provide any, the defaults will be used.
 
 ## Contributing
 
