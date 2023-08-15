@@ -45,4 +45,6 @@ You can provide some, all, or none of these. If you don't provide any, the defau
 
 ## Contributing
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.<br>
+
+![](https://i.imgur.com/cNqnjxa.png)
