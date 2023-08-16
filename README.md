@@ -26,7 +26,9 @@ The vast majority of my work on this has been "prompt engineering" ChatGPT to ge
 
 ## Installation
 
-1. First, make sure to set your OpenAI API key as an environment variable. On Linux, ```export OPENAI_API_KEY={your key}```. On Windows, ```set OPENAI_API_KEY={your key}```.<br><br>
+There's a lot of configuration options so I've opted for a JSON config file to store the needed values. Use the "lambchop_config.json.example" file in this repo as your template. Fill in the values and then save the file as lambchop_config.json, removing "example". **IMPORTANT: This file will contain your sensitive keys so keep it safe!**
+
+1. Make sure to set the path to your lambchop_config.json file as an environment variable. On Linux, ```export LAMBCHOP_CONFIG_FILE={path}```. On Windows, ```set LAMBCHOP_CONFIG_FILE={path}```. 
 2. From the root repo directory, run ```pip install .```
 
 ## Usage

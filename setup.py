@@ -7,7 +7,8 @@ setup(
     install_requires=[
         "openai",
         "colorama",
-        "requests"
+        "requests",
+        "tweepy"
     ],
     entry_points={
         "console_scripts": [

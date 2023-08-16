@@ -8,38 +8,33 @@ from random import choice
 import openai
 import requests
 
-from lambchop.utils import get_output_dir, printc, save_to_file
+from lambchop.utils import get_config_options, printc, save_to_file
 
-try:
-    openai.api_key = os.environ["OPENAI_API_KEY"]
-except KeyError:
-    printc("[!] OPENAI_API_KEY environment variable not set")
-    exit(1)
+OUT_DIR = get_config_options()[0]
 
 
-def main(country="USA", language="English", style="casual", out_dir=None, extras=True):
-    """Main function for generating a user profile and social media content."""
-
-    if not out_dir:
-        out_dir = get_output_dir()
+def main(country="USA", language="English", style="casual", extras=True):
+    """
+    Main function for generating a user profile and social media content.
+    """
 
     # Generate and output user profile
     user_profile = UserProfile(country=country, language=language, style=style)
     user_profile.generate_profile()
-    saved_profile_path = user_profile.output_profile(out_dir)
+    saved_profile_path = user_profile.output_profile(OUT_DIR)
 
     # Generate and save social media avatar
     image_generator = ImageGenerator(user_profile)
     image_generator.generate_image()
-    image_generator.save_image(out_dir)
+    image_generator.save_image()
 
     if extras:
-        extra_stuff = ExtraStuff(saved_profile_path, out_dir)
+        extra_stuff = ExtraStuff(saved_profile_path)
         extra_stuff.suggest_subreddits()
         extra_stuff.create_twitter_post()
 
 
-def load_profile_data(profile_path, out_dir=None):
+def load_profile_data(profile_path):
     """
     Load AI generated profile data from its JSON home.
 
@@ -57,11 +52,11 @@ def load_profile_data(profile_path, out_dir=None):
         if selection in ["", "y", "yes"]:
             profile = UserProfile()
             profile.generate_profile()
-            profile_path = profile.output_profile(out_dir)
+            profile_path = profile.output_profile(OUT_DIR)
             with open(profile_path, "r", encoding="utf-8") as f:
                 return json.load(f)
         else:
-            raise FileNotFoundError(f"Profile not found: {profile_path}")
+            printc("[!] Ok then, nothing for me to do here. Exiting...")
 
 
 class UserProfile:
@@ -111,7 +106,7 @@ class UserProfile:
         selected_age_range = choice(age_range)
         selected_occupation = choice(occupation_types)
 
-        prompt = f"""Create a realistic user profile in {self.language} for someone aged {selected_age_range} 
+        prompt = f"""Create a realistic user profile in {self.language} for someone aged {selected_age_range}
         from {self.country}. This person works as a {selected_occupation}. 
         The bio should reflect their age, country, and occupation. 
         If English is chosen and the person isn't a native speaker, 
@@ -153,7 +148,6 @@ class UserProfile:
         Writes the profile info to a JSON file and returns the path to the saved file.
         """
 
-        out_dir = get_output_dir(out_dir)
         return save_to_file(self.convert_to_json(), self.profile_info["full_name"], out_dir)
 
 
@@ -171,7 +165,7 @@ class ImageGenerator:
         Generates a social media avatar based on the profile bio.
         """
 
-        printc(f"[*] Generating social media avatar")
+        printc("[*] Generating social media avatar")
         prompt = f"{self.profile.profile_info['avatar']}"
 
         response = openai.Image.create(
@@ -180,22 +174,21 @@ class ImageGenerator:
             size="512x512"
         )
 
-        self.image_url = response['data'][0]['url']
+        self.image_url = response["data"][0]["url"]
 
-    def save_image(self, out_dir):
+    def save_image(self):
         """
         Saves the generated image to the specified directory.
         """
 
-        out_dir = get_output_dir(out_dir)
-        os.makedirs(out_dir, exist_ok=True)
+        os.makedirs(OUT_DIR, exist_ok=True)
 
         filename = self.profile.profile_info["full_name"].lower().replace(" ", "_") + ".png"
-        output_file_path = os.path.join(out_dir, filename)
+        output_file_path = os.path.join(OUT_DIR, filename)
 
         # Download the image and save it to the specified directory
-        response = requests.get(self.image_url)
-        with open(output_file_path, 'wb') as f:
+        response = requests.get(self.image_url, timeout=10)
+        with open(output_file_path, "wb") as f:
             f.write(response.content)
 
 
@@ -207,10 +200,10 @@ class ExtraStuff:
     and an optional output directory. The profile data is loaded from the JSON file to be used in later methods.
     """
 
-    def __init__(self, profile_path, out_dir=None):
+    def __init__(self, profile_path):
         self.profile_path = profile_path
-        self.output_dir = get_output_dir(out_dir)
-        with open(self.profile_path, 'r') as f:
+        self.output_dir = OUT_DIR
+        with open(self.profile_path, "r", encoding="utf-8") as f:
             self.profile_data = json.load(f)
 
     def suggest_subreddits(self):
@@ -223,7 +216,7 @@ class ExtraStuff:
         directory.
         """
 
-        printc(f"[*] Suggesting subreddits for the generated profile")
+        printc("[*] Suggesting subreddits for the generated profile")
         bio = self.profile_data.get("bio", "")
 
         completion = openai.ChatCompletion.create(
@@ -236,7 +229,7 @@ class ExtraStuff:
         )
 
         result = completion.choices[0]["message"]["content"].strip().split("\n")
-        save_to_file(result, self.profile_data["full_name"] + f"_subreddits", self.output_dir, extension="txt")
+        save_to_file(result, f"{self.profile_data['full_name']}_subreddits", self.output_dir, extension="txt")
 
     def create_twitter_post(self):
         """
@@ -246,7 +239,7 @@ class ExtraStuff:
         file in the output directory.
         """
 
-        printc(f"[*] Writing a tweet for the generated user")
+        printc("[*] Writing a tweet for the generated user")
         bio = self.profile_data.get("bio", "")
 
         completion = openai.ChatCompletion.create(
@@ -263,7 +256,7 @@ class ExtraStuff:
         )
 
         result = completion.choices[0]["message"]["content"].strip().split("\n")
-        save_to_file(result, self.profile_data["full_name"] + f"_tweet", self.output_dir, extension="txt")
+        save_to_file(result, f"{self.profile_data['full_name']}_tweet", self.output_dir, extension="txt")
 
 
 if __name__ == "__main__":

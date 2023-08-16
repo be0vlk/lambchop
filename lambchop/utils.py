@@ -1,9 +1,11 @@
 """ This module contains utility functions used by the lambchop package such as colored output and file operations. """
 
 import builtins
+import json
 import os
 import re
 from colorama import init, Fore
+import openai
 
 # Initialize colorama
 init(autoreset=True)
@@ -17,6 +19,10 @@ def print_banner():
     print("""
 █░░ ▄▀█ █▀▄▀█ █▄▄ █▀▀ █░█ █▀█ █▀█
 █▄▄ █▀█ █░▀░█ █▄█ █▄▄ █▀█ █▄█ █▀▀
+_______________________________
+
+AI driven sock puppet generator
+_______________________________
 """)
 
 
@@ -53,14 +59,6 @@ def printc(*args, **kwargs):
     builtins.print(*(colorize(arg) for arg in args), **kwargs)
 
 
-def get_output_dir(output_dir=None):
-    """
-    Returns the output directory in the user's home directory.
-    """
-    home_dir = os.path.expanduser("~")
-    output_dir = os.path.join(home_dir, "lambchop_output")
-    return output_dir
-
 def save_to_file(data, full_name, out_dir, extension="json", separator="\n"):
     """
     Saves data to a file based on the provided person's name and extension.
@@ -86,3 +84,18 @@ def save_to_file(data, full_name, out_dir, extension="json", separator="\n"):
         f.write(data)
 
     return output_file_path
+
+
+def get_config_options():
+    try:
+        config_file = os.getenv("LAMBCHOP_CONFIG_FILE")
+        with open(config_file, "r", encoding="utf-8") as f:
+            j = json.loads(f.read())
+            openai.api_key = j["OPENAI_API_KEY"]
+            twitter_config = j["twitter"]
+            output_dir = j["OUTPUT_DIR"]
+    except (FileNotFoundError, TypeError):
+        printc("[!] Set the path to your config file using the LAMBCHOP_CONFIG_FILE environment variable.")
+        exit(1)
+
+    return output_dir, twitter_config

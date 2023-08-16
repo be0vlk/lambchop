@@ -14,11 +14,6 @@ from lambchop import generator
 from lambchop.utils import printc, print_banner
 
 
-def clear_screen():
-    import os
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-
 def main():
     try:
         print_banner()
